@@ -198,7 +198,6 @@ model Attendance {
   faceMatchPercentage Decimal?  @map("face_match_percentage") @db.Decimal
   status              String    @default("absent")
   createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @default(now()) @map("updated_at")
 
   shift    Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
   employee Employee @relation(fields: [employeeId], references: [id])
