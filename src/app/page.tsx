@@ -1,65 +1,292 @@
-import Image from "next/image";
+import { Suspense } from "react";
+import {
+  Building2,
+  MapPin,
+  Users,
+  AlertTriangle,
+  Shield,
+  Clock,
+} from "lucide-react";
+import { StatsCard } from "@/components/ui/StatsCard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { StatusBadge } from "@/components/ui/Badge";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/Table";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { CardSkeleton, TableSkeleton } from "@/components/ui/Loading";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  getDashboardStats,
+  getTodayShifts,
+  getRecentIncidents,
+  getSitesOverview,
+} from "@/lib/queries/dashboard";
+import Link from "next/link";
 
-export default function Home() {
+async function DashboardStats() {
+  const stats = await getDashboardStats();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatsCard
+        title="Total Clients"
+        value={stats.totalClients}
+        subtitle={`${stats.activeClients} active`}
+        icon={Building2}
+        iconColor="text-blue-400"
+      />
+      <StatsCard
+        title="Total Sites"
+        value={stats.totalSites}
+        subtitle={`${stats.activeSites} active`}
+        icon={MapPin}
+        iconColor="text-green-400"
+      />
+      <StatsCard
+        title="Employees"
+        value={stats.totalEmployees}
+        subtitle={`${stats.activeEmployees} active`}
+        icon={Users}
+        iconColor="text-purple-400"
+      />
+      <StatsCard
+        title="Open Incidents"
+        value={stats.openIncidents}
+        subtitle="Requires attention"
+        icon={AlertTriangle}
+        iconColor="text-red-400"
+      />
+    </div>
+  );
+}
+
+async function TodayShifts() {
+  const shifts = await getTodayShifts();
+
+  if (shifts.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Today&apos;s Shifts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            icon={Clock}
+            title="No shifts today"
+            description="There are no shifts scheduled for today."
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Today&apos;s Shifts</CardTitle>
+        <Link href="/shifts" className="text-sm text-blue-400 hover:text-blue-300">
+          View all
+        </Link>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employee</TableHead>
+              <TableHead>Post</TableHead>
+              <TableHead>Site</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shifts.map((shift) => (
+              <TableRow key={shift.id}>
+                <TableCell>
+                  <div>
+                    <p className="font-medium text-white">
+                      {shift.employee.firstName} {shift.employee.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {shift.employee.designation.name}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell>{shift.post.name}</TableCell>
+                <TableCell>{shift.post.site.name}</TableCell>
+                <TableCell>
+                  {new Date(shift.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(shift.endTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={shift.status} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function RecentIncidents() {
+  const incidents = await getRecentIncidents();
+
+  if (incidents.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Incidents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            icon={AlertTriangle}
+            title="No incidents"
+            description="No incidents have been reported."
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Recent Incidents</CardTitle>
+        <Link href="/incidents" className="text-sm text-blue-400 hover:text-blue-300">
+          View all
+        </Link>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y divide-[#334155]">
+          {incidents.map((incident) => (
+            <Link
+              key={incident.id}
+              href={`/incidents/${incident.id}`}
+              className="block p-4 hover:bg-[#334155]/50 transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-white truncate">
+                    {incident.title}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {incident.post.site.name} - {incident.post.name}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <StatusBadge status={incident.severity} />
+                  <span className="text-xs text-gray-500">
+                    {new Date(incident.occurredAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function SitesOverview() {
+  const sites = await getSitesOverview();
+
+  if (sites.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Sites Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            icon={MapPin}
+            title="No sites"
+            description="No sites have been added yet."
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Sites Overview</CardTitle>
+        <Link href="/sites" className="text-sm text-blue-400 hover:text-blue-300">
+          View all
+        </Link>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#334155]">
+          {sites.slice(0, 6).map((site) => (
+            <Link
+              key={site.id}
+              href={`/sites/${site.id}`}
+              className="p-4 hover:bg-[#334155]/50 transition-colors"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-medium text-white">{site.name}</p>
+                  <p className="text-sm text-gray-400">
+                    {site.opzone.region.client.name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 text-gray-400">
+                  <Shield className="w-4 h-4" />
+                  <span className="text-sm">{site.posts.length}</span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <div>
+      <PageHeader
+        title="Dashboard"
+        description="Overview of your security operations"
+      />
+
+      <div className="space-y-6">
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          }
+        >
+          <DashboardStats />
+        </Suspense>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Suspense fallback={<TableSkeleton rows={5} cols={5} />}>
+            <TodayShifts />
+          </Suspense>
+
+          <Suspense fallback={<TableSkeleton rows={5} cols={2} />}>
+            <RecentIncidents />
+          </Suspense>
         </div>
-      </main>
+
+        <Suspense fallback={<TableSkeleton rows={3} cols={2} />}>
+          <SitesOverview />
+        </Suspense>
+      </div>
     </div>
   );
 }

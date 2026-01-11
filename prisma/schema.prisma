@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -11,11 +9,294 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Example model - customize as needed
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Client {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  code          String?
+  industry      String?
+  contactPerson String?  @map("contact_person")
+  contactEmail  String?  @map("contact_email")
+  contactPhone  String?  @map("contact_phone")
+  city          String?
+  state         String?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  regions Region[]
+
+  @@map("clients")
+}
+
+model Region {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId    String   @map("client_id") @db.Uuid
+  name        String
+  code        String?
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  client  Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  opzones Opzone[]
+
+  @@map("regions")
+}
+
+model Opzone {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  regionId         String   @map("region_id") @db.Uuid
+  name             String
+  code             String?
+  description      String?
+  zoneManagerName  String?  @map("zone_manager_name")
+  zoneManagerPhone String?  @map("zone_manager_phone")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @map("updated_at")
+
+  region Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  sites  Site[]
+
+  @@map("opzones")
+}
+
+model Site {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  opzoneId         String   @map("opzone_id") @db.Uuid
+  name             String
+  code             String?
+  address          String?
+  city             String?
+  state            String?
+  pincode          String?
+  latitude         Decimal? @db.Decimal
+  longitude        Decimal? @db.Decimal
+  siteInchargeName  String?  @map("site_incharge_name")
+  siteInchargePhone String?  @map("site_incharge_phone")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @map("updated_at")
+
+  opzone                  Opzone                   @relation(fields: [opzoneId], references: [id], onDelete: Cascade)
+  posts                   Post[]
+  employeeSiteAssignments EmployeeSiteAssignment[]
+
+  @@map("sites")
+}
+
+model Post {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  siteId      String   @map("site_id") @db.Uuid
+  name        String
+  code        String?
+  description String?
+  postType    String?  @map("post_type")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  site      Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  shifts    Shift[]
+  incidents Incident[]
+
+  @@map("posts")
+}
+
+model Designation {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  level       Int      @default(1)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+
+  employees Employee[]
+
+  @@map("designations")
+}
+
+model Employee {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeCode  String   @unique @map("employee_code")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  designationId String   @map("designation_id") @db.Uuid
+  phone         String?
+  email         String?
+  city          String?
+  state         String?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  designation             Designation              @relation(fields: [designationId], references: [id])
+  shifts                  Shift[]
+  attendance              Attendance[]
+  incidents               Incident[]
+  employeeSiteAssignments EmployeeSiteAssignment[]
+
+  @@map("employees")
+}
+
+model EmployeeSiteAssignment {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employeeId   String   @map("employee_id") @db.Uuid
+  siteId       String   @map("site_id") @db.Uuid
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  assignedFrom DateTime @default(now()) @map("assigned_from")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  site     Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@map("employee_site_assignments")
+}
+
+model ShiftTemplate {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  code          String?
+  startTime     DateTime @map("start_time") @db.Time()
+  endTime       DateTime @map("end_time") @db.Time()
+  durationHours Decimal  @map("duration_hours") @db.Decimal
+  isOvernight   Boolean  @default(false) @map("is_overnight")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @map("updated_at")
+
+  shifts Shift[]
+
+  @@map("shift_templates")
+}
+
+model Shift {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId          String    @map("post_id") @db.Uuid
+  employeeId      String    @map("employee_id") @db.Uuid
+  shiftTemplateId String?   @map("shift_template_id") @db.Uuid
+  shiftDate       DateTime  @map("shift_date") @db.Date
+  startTime       DateTime  @map("start_time") @db.Time()
+  endTime         DateTime  @map("end_time") @db.Time()
+  status          String    @default("scheduled")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @map("updated_at")
+
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  employee      Employee       @relation(fields: [employeeId], references: [id])
+  shiftTemplate ShiftTemplate? @relation(fields: [shiftTemplateId], references: [id])
+  attendance    Attendance[]
+
+  @@map("shifts")
+}
+
+model Attendance {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shiftId             String    @map("shift_id") @db.Uuid
+  employeeId          String    @map("employee_id") @db.Uuid
+  checkInTime         DateTime? @map("check_in_time")
+  checkOutTime        DateTime? @map("check_out_time")
+  faceMatchPercentage Decimal?  @map("face_match_percentage") @db.Decimal
+  status              String    @default("absent")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @default(now()) @map("updated_at")
+
+  shift    Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("attendance")
+}
+
+model Incident {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId       String    @map("post_id") @db.Uuid
+  reportedBy   String    @map("reported_by") @db.Uuid
+  incidentType String?   @map("incident_type")
+  severity     String    @default("low")
+  title        String
+  description  String?
+  occurredAt   DateTime  @default(now()) @map("occurred_at")
+  status       String    @default("open")
+  resolvedAt   DateTime? @map("resolved_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @map("updated_at")
+
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporter   Employee @relation(fields: [reportedBy], references: [id])
+
+  @@map("incidents")
+}
+
+// Views - read-only access to existing database views
+view VSiteHierarchy {
+  siteId     String  @map("site_id")
+  siteName   String  @map("site_name")
+  siteCode   String? @map("site_code")
+  isActive   Boolean @map("is_active")
+  postId     String? @map("post_id")
+  postName   String? @map("post_name")
+  opzoneName String  @map("opzone_name")
+  regionName String  @map("region_name")
+  clientName String  @map("client_name")
+  clientId   String  @map("client_id")
+
+  @@id([siteId])
+  @@map("v_site_hierarchy")
+}
+
+view VSiteSummary {
+  siteId         String  @map("site_id")
+  siteName       String  @map("site_name")
+  siteCode       String? @map("site_code")
+  isActive       Boolean @map("is_active")
+  address        String?
+  city           String?
+  clientName     String  @map("client_name")
+  regionName     String  @map("region_name")
+  opzoneName     String  @map("opzone_name")
+  totalPosts     BigInt  @map("total_posts")
+  activePosts    BigInt  @map("active_posts")
+  totalShifts    BigInt  @map("total_shifts")
+  totalIncidents BigInt  @map("total_incidents")
+
+  @@id([siteId])
+  @@map("v_site_summary")
+}
+
+view VShiftDetails {
+  shiftId      String   @map("shift_id")
+  shiftDate    DateTime @map("shift_date")
+  startTime    DateTime @map("start_time")
+  endTime      DateTime @map("end_time")
+  shiftStatus  String   @map("shift_status")
+  postId       String   @map("post_id")
+  postName     String   @map("post_name")
+  siteId       String   @map("site_id")
+  siteName     String   @map("site_name")
+  employeeId   String   @map("employee_id")
+  employeeCode String   @map("employee_code")
+  employeeName String   @map("employee_name")
+  designation  String
+
+  @@id([shiftId])
+  @@map("v_shift_details")
+}
+
+view VEmployeeSummary {
+  employeeId      String   @map("employee_id")
+  employeeCode    String   @map("employee_code")
+  fullName        String   @map("full_name")
+  email           String?
+  phone           String?
+  designation     String
+  status          String
+  joiningDate     DateTime @map("joining_date")
+  totalShifts     BigInt   @map("total_shifts")
+  completedShifts BigInt   @map("completed_shifts")
+  totalAttendance BigInt   @map("total_attendance")
+  presentDays     BigInt   @map("present_days")
+
+  @@id([employeeId])
+  @@map("v_employee_summary")
 }
