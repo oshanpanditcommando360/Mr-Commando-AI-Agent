@@ -105,12 +105,10 @@ model Post {
 }
 
 model Designation {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
-  level       Int      @default(1)
+  level       Int     @default(1)
   description String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @map("updated_at")
 
   employees Employee[]
 
