@@ -230,7 +230,7 @@ model Incident {
 
 // Views - read-only access to existing database views
 view VSiteHierarchy {
-  siteId     String  @map("site_id")
+  siteId     String  @unique @map("site_id")
   siteName   String  @map("site_name")
   siteCode   String? @map("site_code")
   isActive   Boolean @map("is_active")
@@ -241,12 +241,11 @@ view VSiteHierarchy {
   clientName String  @map("client_name")
   clientId   String  @map("client_id")
 
-  @@id([siteId])
   @@map("v_site_hierarchy")
 }
 
 view VSiteSummary {
-  siteId         String  @map("site_id")
+  siteId         String  @unique @map("site_id")
   siteName       String  @map("site_name")
   siteCode       String? @map("site_code")
   isActive       Boolean @map("is_active")
@@ -260,12 +259,11 @@ view VSiteSummary {
   totalShifts    BigInt  @map("total_shifts")
   totalIncidents BigInt  @map("total_incidents")
 
-  @@id([siteId])
   @@map("v_site_summary")
 }
 
 view VShiftDetails {
-  shiftId      String   @map("shift_id")
+  shiftId      String   @unique @map("shift_id")
   shiftDate    DateTime @map("shift_date")
   startTime    DateTime @map("start_time")
   endTime      DateTime @map("end_time")
@@ -279,12 +277,11 @@ view VShiftDetails {
   employeeName String   @map("employee_name")
   designation  String
 
-  @@id([shiftId])
   @@map("v_shift_details")
 }
 
 view VEmployeeSummary {
-  employeeId      String   @map("employee_id")
+  employeeId      String   @unique @map("employee_id")
   employeeCode    String   @map("employee_code")
   fullName        String   @map("full_name")
   email           String?
@@ -297,6 +294,5 @@ view VEmployeeSummary {
   totalAttendance BigInt   @map("total_attendance")
   presentDays     BigInt   @map("present_days")
 
-  @@id([employeeId])
   @@map("v_employee_summary")
 }
