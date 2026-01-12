@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { agentTools, SYSTEM_PROMPT } from "@/lib/agent/tools";
 import { handleFunctionCall } from "@/lib/agent/handlers";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,15 +16,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: "Gemini API key not configured" },
         { status: 500 }
       );
     }
 
+    const genAI = new GoogleGenerativeAI(apiKey);
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_PROMPT,
       tools: [{ functionDeclarations: agentTools }],
     });
@@ -78,8 +81,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Chat API error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to process chat message" },
+      { error: `Failed to process chat message: ${errorMessage}` },
       { status: 500 }
     );
   }
