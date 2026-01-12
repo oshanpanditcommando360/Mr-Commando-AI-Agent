@@ -26,8 +26,11 @@ export async function POST(request: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
+    // Use gemini-1.5-flash - stable and supports function calling
+    const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: modelName,
       systemInstruction: SYSTEM_PROMPT,
       tools: [{ functionDeclarations: agentTools }],
     });
