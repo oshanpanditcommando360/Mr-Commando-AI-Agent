@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
-import { agentTools, SYSTEM_PROMPT } from "@/lib/agent/tools";
+import { agentTools } from "@/lib/agent/tools";
+import { SYSTEM_PROMPT, MODEL_NAME } from "@/lib/agent/config";
 import { handleFunctionCall } from "@/lib/agent/handlers";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Create chat with function calling
     const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
+      model: MODEL_NAME,
       config: {
         systemInstruction: SYSTEM_PROMPT,
         tools: [{ functionDeclarations: agentTools }],
