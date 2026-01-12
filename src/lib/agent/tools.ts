@@ -1,41 +1,21 @@
-import { Type } from "@google/genai";
+import { Type, FunctionDeclaration } from "@google/genai";
 
-export const agentTools = [
+export const agentTools: FunctionDeclaration[] = [
   {
     name: "get_dashboard_stats",
     description: "Get overall statistics including total clients, sites, employees, posts, and open incidents",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-      required: [],
-    },
   },
   {
     name: "get_all_clients",
     description: "Get a list of all clients with their basic information",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-      required: [],
-    },
   },
   {
     name: "get_all_sites",
     description: "Get a list of all sites with their location and client information",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-      required: [],
-    },
   },
   {
     name: "get_all_employees",
     description: "Get a list of all employees with their designation and contact information",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {},
-      required: [],
-    },
   },
   {
     name: "get_site_details",
