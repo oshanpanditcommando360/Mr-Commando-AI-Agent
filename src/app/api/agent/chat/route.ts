@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { agentTools, SYSTEM_PROMPT } from "@/lib/agent/tools";
 import { handleFunctionCall } from "@/lib/agent/handlers";
@@ -24,31 +24,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const ai = new GoogleGenAI({ apiKey });
 
-    // Use gemini-2.0-flash-lite for fast responses with function calling
-    const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash-lite";
-
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: SYSTEM_PROMPT,
+    // Create chat with function calling
+    const chat = ai.chats.create({
+      model: "gemini-2.5-flash",
+      system: SYSTEM_PROMPT,
       tools: [{ functionDeclarations: agentTools }],
     });
 
-    const chat = model.startChat({
-      history: [],
-    });
-
-    // Send the user message
-    let result = await chat.sendMessage(message);
-    let response = result.response;
+    // Send user message
+    let response = await chat.sendMessage({ message });
 
     // Handle function calls in a loop
     let maxIterations = 10;
     let iterations = 0;
 
     while (iterations < maxIterations) {
-      const functionCalls = response.functionCalls();
+      const functionCalls = response.functionCalls;
 
       if (!functionCalls || functionCalls.length === 0) {
         break;
@@ -59,24 +52,24 @@ export async function POST(request: NextRequest) {
         functionCalls.map(async (call) => {
           const functionResult = await handleFunctionCall(
             call.name,
-            call.args as Record<string, unknown>
+            (call.args as Record<string, unknown>) || {}
           );
           return {
-            functionResponse: {
-              name: call.name,
-              response: { result: functionResult },
-            },
+            name: call.name,
+            response: { result: functionResult },
           };
         })
       );
 
       // Send function results back to the model
-      result = await chat.sendMessage(functionResponses);
-      response = result.response;
+      response = await chat.sendMessage({
+        functionResponses,
+      });
+
       iterations++;
     }
 
-    const text = response.text();
+    const text = response.text || "I couldn't generate a response. Please try again.";
 
     return NextResponse.json({
       response: text,

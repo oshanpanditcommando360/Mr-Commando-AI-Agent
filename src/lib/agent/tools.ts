@@ -1,11 +1,11 @@
-import { FunctionDeclaration, SchemaType } from "@google/generative-ai";
+import { Type } from "@google/genai";
 
-export const agentTools: FunctionDeclaration[] = [
+export const agentTools = [
   {
     name: "get_dashboard_stats",
     description: "Get overall statistics including total clients, sites, employees, posts, and open incidents",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {},
       required: [],
     },
@@ -14,7 +14,7 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_all_clients",
     description: "Get a list of all clients with their basic information",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {},
       required: [],
     },
@@ -23,7 +23,7 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_all_sites",
     description: "Get a list of all sites with their location and client information",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {},
       required: [],
     },
@@ -32,7 +32,7 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_all_employees",
     description: "Get a list of all employees with their designation and contact information",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {},
       required: [],
     },
@@ -41,10 +41,10 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_site_details",
     description: "Get detailed information about a specific site by name",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         site_name: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "The name of the site to search for (partial match supported)",
         },
       },
@@ -55,10 +55,10 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_posts_for_site",
     description: "Get all security posts at a specific site",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         site_name: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "The name of the site to get posts for (partial match supported)",
         },
       },
@@ -69,10 +69,10 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_employee_details",
     description: "Get detailed information about an employee by name or employee code",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         name_or_code: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "The employee name or employee code to search for",
         },
       },
@@ -83,10 +83,10 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_todays_shifts",
     description: "Get all shifts scheduled for today, optionally filtered by site",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         site_name: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "Optional site name to filter shifts (partial match supported)",
         },
       },
@@ -97,10 +97,10 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_current_shifts",
     description: "Get shifts that are currently in progress right now",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         site_name: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "Optional site name to filter shifts (partial match supported)",
         },
       },
@@ -111,14 +111,14 @@ export const agentTools: FunctionDeclaration[] = [
     name: "get_recent_incidents",
     description: "Get recent security incidents, optionally filtered by number of days and site",
     parameters: {
-      type: SchemaType.OBJECT,
+      type: Type.OBJECT,
       properties: {
         days: {
-          type: SchemaType.NUMBER,
+          type: Type.NUMBER,
           description: "Number of days to look back (default: 7)",
         },
         site_name: {
-          type: SchemaType.STRING,
+          type: Type.STRING,
           description: "Optional site name to filter incidents (partial match supported)",
         },
       },
