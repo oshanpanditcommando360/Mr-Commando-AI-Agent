@@ -52,12 +52,13 @@ export async function POST(request: NextRequest) {
       // Execute all function calls
       const functionResponses = await Promise.all(
         functionCalls.map(async (call) => {
+          const functionName = call.name || "unknown";
           const functionResult = await handleFunctionCall(
-            call.name,
+            functionName,
             (call.args as Record<string, unknown>) || {}
           );
           return {
-            name: call.name,
+            name: functionName,
             response: { result: functionResult },
           };
         })
