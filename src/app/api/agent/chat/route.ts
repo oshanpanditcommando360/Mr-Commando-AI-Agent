@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // Execute all function calls
-      const functionResponses = await Promise.all(
+      // Execute all function calls and build function response parts
+      const functionResponseParts = await Promise.all(
         functionCalls.map(async (call) => {
           const functionName = call.name || "unknown";
           const functionResult = await handleFunctionCall(
@@ -58,15 +58,17 @@ export async function POST(request: NextRequest) {
             (call.args as Record<string, unknown>) || {}
           );
           return {
-            name: functionName,
-            response: { result: functionResult },
+            functionResponse: {
+              name: functionName,
+              response: { result: functionResult },
+            },
           };
         })
       );
 
-      // Send function results back to the model
+      // Send function results back to the model as parts
       response = await chat.sendMessage({
-        functionResponses,
+        message: functionResponseParts,
       });
 
       iterations++;
