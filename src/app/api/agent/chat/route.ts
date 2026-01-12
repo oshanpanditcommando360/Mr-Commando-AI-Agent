@@ -29,8 +29,10 @@ export async function POST(request: NextRequest) {
     // Create chat with function calling
     const chat = ai.chats.create({
       model: "gemini-2.5-flash",
-      system: SYSTEM_PROMPT,
-      tools: [{ functionDeclarations: agentTools }],
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        tools: [{ functionDeclarations: agentTools }],
+      },
     });
 
     // Send user message
