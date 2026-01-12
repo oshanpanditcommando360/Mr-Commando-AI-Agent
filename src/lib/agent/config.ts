@@ -1,8 +1,6 @@
-// Using gemini-2.0-flash for better rate limits:
-// - 15 RPM (vs 10 for 2.5-flash)
-// - 1,500 RPD (vs ~1,000 for 2.5-flash)
-// - 1,000,000 TPM (vs 250,000 for 2.5-flash)
-export const MODEL_NAME = "gemini-2.0-flash";
+// Model: gemini-2.0-flash (better free tier limits)
+// Free tier: 15 RPM, 1,500 RPD, 1,000,000 TPM
+export const MODEL_NAME = "gemini-2.0-flash" as const;
 
 export const SYSTEM_PROMPT = `You are Mr. Commando, an AI assistant for Commando360 security management platform.
 
