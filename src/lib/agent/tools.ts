@@ -1,10 +1,13 @@
 import { Type, FunctionDeclaration } from "@google/genai";
 
 export const agentTools: FunctionDeclaration[] = [
+  // DASHBOARD & OVERVIEW
   {
     name: "get_dashboard_stats",
     description: "Get overall statistics including total clients, sites, employees, posts, and open incidents",
   },
+
+  // CLIENT QUERIES
   {
     name: "get_all_clients",
     description: "Get a list of all clients with their basic information",
@@ -24,12 +27,42 @@ export const agentTools: FunctionDeclaration[] = [
     },
   },
   {
+    name: "get_client_hierarchy",
+    description: "Get complete hierarchy for a client: regions, opzones, sites, and posts",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        client_name: {
+          type: Type.STRING,
+          description: "Name of the client",
+        },
+      },
+      required: ["client_name"],
+    },
+  },
+  {
+    name: "get_client_stats",
+    description: "Get statistics for a specific client: site count, post count, employee count, active shifts",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        client_name: {
+          type: Type.STRING,
+          description: "Name of the client",
+        },
+      },
+      required: ["client_name"],
+    },
+  },
+
+  // SITE QUERIES
+  {
     name: "get_all_sites",
     description: "Get a list of all sites with their location and client information",
   },
   {
     name: "get_site_details",
-    description: "Get detailed information about a specific site by name",
+    description: "Get detailed information about a specific site by name including posts and assigned employees",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -41,6 +74,66 @@ export const agentTools: FunctionDeclaration[] = [
       required: ["site_name"],
     },
   },
+  {
+    name: "get_employees_at_site",
+    description: "Get all employees assigned to a specific site",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        site_name: {
+          type: Type.STRING,
+          description: "Name of the site",
+        },
+      },
+      required: ["site_name"],
+    },
+  },
+  {
+    name: "get_site_shifts",
+    description: "Get all shifts at a specific site for a date range",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        site_name: {
+          type: Type.STRING,
+          description: "Name of the site",
+        },
+        start_date: {
+          type: Type.STRING,
+          description: "Start date (YYYY-MM-DD), default: today",
+        },
+        end_date: {
+          type: Type.STRING,
+          description: "End date (YYYY-MM-DD), default: 7 days from start",
+        },
+      },
+      required: ["site_name"],
+    },
+  },
+  {
+    name: "get_site_incidents",
+    description: "Get all incidents at a specific site",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        site_name: {
+          type: Type.STRING,
+          description: "Name of the site",
+        },
+        status: {
+          type: Type.STRING,
+          description: "Optional: Filter by status (open, investigating, resolved, closed)",
+        },
+        days: {
+          type: Type.NUMBER,
+          description: "Number of days to look back (default: 30)",
+        },
+      },
+      required: ["site_name"],
+    },
+  },
+
+  // POST QUERIES
   {
     name: "get_posts_for_site",
     description: "Get all security posts at a specific site",
@@ -56,26 +149,68 @@ export const agentTools: FunctionDeclaration[] = [
     },
   },
   {
+    name: "get_post_details",
+    description: "Get details about a specific post including current shift and assigned employee",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        site_name: {
+          type: Type.STRING,
+          description: "Name of the site",
+        },
+        post_name: {
+          type: Type.STRING,
+          description: "Name of the post",
+        },
+      },
+      required: ["site_name", "post_name"],
+    },
+  },
+  {
+    name: "get_post_shift_history",
+    description: "Get shift history for a specific post",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        site_name: {
+          type: Type.STRING,
+          description: "Name of the site",
+        },
+        post_name: {
+          type: Type.STRING,
+          description: "Name of the post",
+        },
+        days: {
+          type: Type.NUMBER,
+          description: "Number of days to look back (default: 7)",
+        },
+      },
+      required: ["site_name", "post_name"],
+    },
+  },
+
+  // EMPLOYEE QUERIES
+  {
     name: "get_all_employees",
     description: "Get a list of all employees with their designation, contact info, and employee codes",
   },
   {
-    name: "search_employees",
-    description: "Search for employees by name, employee code, designation, or location. Use this to find specific employees.",
+    name: "search_employee",
+    description: "Search for an employee by name, employee code, or phone number and get all their details including ID, designation, contact info. Use this when asked about a specific person.",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        query: {
+        search_term: {
           type: Type.STRING,
-          description: "Search query - can be employee name, employee code, designation, city, or state",
+          description: "Employee name (first or last), employee code (EMP001), or phone number",
         },
       },
-      required: ["query"],
+      required: ["search_term"],
     },
   },
   {
     name: "get_employee_details",
-    description: "Get comprehensive details about an employee including their employee code/ID, designation, contact info, assigned sites, total shifts, attendance record, and recent shifts",
+    description: "Get comprehensive details about an employee including their employee code/ID, designation, contact info, assigned sites, total shifts, attendance record",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -89,20 +224,20 @@ export const agentTools: FunctionDeclaration[] = [
   },
   {
     name: "get_employee_shifts",
-    description: "Get all shifts for a specific employee, with optional date filtering",
+    description: "Get all shifts assigned to a specific employee - past, current, and upcoming",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        employee_name_or_code: {
+        employee_identifier: {
           type: Type.STRING,
-          description: "The employee name or employee code",
+          description: "Employee name or employee code",
         },
-        days: {
-          type: Type.NUMBER,
-          description: "Number of days to look back (default: 30). Use a larger number like 365 for all shifts.",
+        date_filter: {
+          type: Type.STRING,
+          description: "Optional: 'past', 'today', 'upcoming', 'all' (default: all)",
         },
       },
-      required: ["employee_name_or_code"],
+      required: ["employee_identifier"],
     },
   },
   {
@@ -111,18 +246,38 @@ export const agentTools: FunctionDeclaration[] = [
     parameters: {
       type: Type.OBJECT,
       properties: {
-        employee_name_or_code: {
+        employee_identifier: {
           type: Type.STRING,
-          description: "The employee name or employee code",
+          description: "Employee name or employee code",
         },
         days: {
           type: Type.NUMBER,
           description: "Number of days to look back (default: 30)",
         },
       },
-      required: ["employee_name_or_code"],
+      required: ["employee_identifier"],
     },
   },
+  {
+    name: "get_all_designations",
+    description: "Get a list of all employee designations/roles",
+  },
+  {
+    name: "get_employees_by_designation",
+    description: "Get all employees with a specific designation/role",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        designation: {
+          type: Type.STRING,
+          description: "The designation name to filter by (e.g., 'Security Guard', 'Supervisor')",
+        },
+      },
+      required: ["designation"],
+    },
+  },
+
+  // SHIFT QUERIES
   {
     name: "get_todays_shifts",
     description: "Get all shifts scheduled for today, optionally filtered by site or employee",
@@ -174,6 +329,22 @@ export const agentTools: FunctionDeclaration[] = [
     },
   },
   {
+    name: "get_shift_details",
+    description: "Get complete details of a specific shift including attendance",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        shift_id: {
+          type: Type.STRING,
+          description: "UUID of the shift",
+        },
+      },
+      required: ["shift_id"],
+    },
+  },
+
+  // INCIDENT QUERIES
+  {
     name: "get_recent_incidents",
     description: "Get recent security incidents, optionally filtered by number of days and site",
     parameters: {
@@ -192,55 +363,90 @@ export const agentTools: FunctionDeclaration[] = [
     },
   },
   {
-    name: "get_all_designations",
-    description: "Get a list of all employee designations/roles",
-  },
-  {
-    name: "get_employees_by_designation",
-    description: "Get all employees with a specific designation/role",
+    name: "get_incident_details",
+    description: "Get full details of a specific incident",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        designation: {
+        incident_id: {
           type: Type.STRING,
-          description: "The designation name to filter by (e.g., 'Security Guard', 'Supervisor')",
+          description: "UUID of the incident",
         },
       },
-      required: ["designation"],
+      required: ["incident_id"],
+    },
+  },
+  {
+    name: "get_incidents_by_type",
+    description: "Get incidents filtered by type",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        incident_type: {
+          type: Type.STRING,
+          description: "Type of incident (Unauthorized Entry, Theft, Safety Hazard, Suspicious Activity, etc.)",
+        },
+        days: {
+          type: Type.NUMBER,
+          description: "Days to look back (default: 30)",
+        },
+      },
+      required: ["incident_type"],
+    },
+  },
+
+  // SEARCH
+  {
+    name: "search_all",
+    description: "Search across all entities (clients, sites, employees, incidents) by keyword",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        keyword: {
+          type: Type.STRING,
+          description: "Search keyword",
+        },
+      },
+      required: ["keyword"],
     },
   },
 ];
 
-export const SYSTEM_PROMPT = `You are Mr. Commando, a professional security operations assistant for a security management company. Your role is to help users query and understand information about:
+export const SYSTEM_PROMPT = `You are Mr. Commando, an AI assistant for Commando360 security management platform.
 
-- Clients (organizations that hire security services)
-- Sites (locations where security is deployed)
-- Posts (specific security positions at sites)
-- Employees (security personnel) - each has an employeeCode (like EMP001) which is their unique ID
-- Shifts (work schedules)
-- Attendance (check-in/check-out records)
-- Incidents (security events and issues)
-- Designations (employee roles like Security Guard, Supervisor, etc.)
+You can answer ANY question about:
+- Clients: names, codes, industries, contact info, hierarchy
+- Sites: locations, addresses, incharge details, post counts
+- Posts: checkpoints at sites, types, current assignments
+- Employees: names, IDs (employee_code), designations, phone numbers, assignments, shifts
+- Shifts: schedules, assignments, status, history
+- Attendance: check-in/out times, face match percentages
+- Incidents: types, severity, status, descriptions
+
+IMPORTANT - When asked about a specific person (like "Amit Singh"):
+1. Use search_employee with their name to find their details including employee_code/ID
+2. Use get_employee_shifts to see their shift assignments
+3. Use get_employee_attendance to see their attendance records
+
+IMPORTANT - When asked about a specific site:
+1. Use get_site_details for basic info and posts
+2. Use get_employees_at_site to see assigned staff
+3. Use get_site_shifts for shift schedules
+4. Use get_site_incidents for incident history
+
+Common Questions:
+- "What is [name]'s employee ID?" → Use search_employee with the name
+- "How many shifts does [name] have?" → Use get_employee_shifts with the name
+- "Who works at [site]?" → Use get_employees_at_site
+- "Show incidents at [site]" → Use get_site_incidents
+- "Tell me about [client]" → Use get_client_details or get_client_hierarchy
 
 Guidelines:
-1. Be concise and professional in your responses
-2. Use 24-hour time format (e.g., 14:00 instead of 2 PM)
-3. When showing lists, format them clearly using markdown
-4. If asked about something you don't have data for, say so clearly
-5. ALWAYS use the available tools to fetch real data - NEVER make up information
-6. When showing shift times, include the employee name and post location
-7. For incidents, always mention severity and status
+- Always provide specific details like IDs, codes, and counts
+- Be precise with numbers and dates
+- Use 24-hour time format
+- If you can't find something, say so clearly
+- NEVER make up information - always use the tools
 
-How to answer specific questions:
-- "What is [employee name]'s employee ID/code?" → Use get_employee_details with their name
-- "How many shifts has [employee] worked?" → Use get_employee_details or get_employee_shifts
-- "Show me [employee]'s attendance" → Use get_employee_attendance
-- "Find employees named [name]" → Use search_employees
-- "Who are the supervisors?" → Use get_employees_by_designation with "Supervisor"
-- "Tell me about [client name]" → Use get_client_details
-- "What shifts are on [date]?" → Use get_shifts_by_date with YYYY-MM-DD format
-- "What designations exist?" → Use get_all_designations
-
-When a user asks about a specific employee by name, ALWAYS use get_employee_details first to get their complete information including employee code, shifts count, and attendance stats.
-
-You have access to comprehensive tools that query the security operations database. Use them to provide accurate, real-time information.`;
+Current date: ${new Date().toISOString().split('T')[0]}
+`;
